@@ -51,6 +51,11 @@ class MiUV(object):
             min=0.0,
             max=20.0,
             parent=shaderLayout)
+        if "uvShaderPlace2dTexture":
+            cmds.attrFieldSliderGrp(
+                uvRepeatSlider,
+                edit=True,
+                at='uvShaderPlace2dTexture.repeatU')
         uvShaderButton = cmds.button(
             label="Create UV shader",
             command=partial(
@@ -282,6 +287,7 @@ class MiUV(object):
         ##### TEXTURE WINDOW LAYOUT #####
         textureLayout = cmds.paneLayout(configuration='single')
         pane = cmds.paneLayout(configuration="vertical2")
+        cmds.paneLayout(pane, e=True, paneSize=(1, 0, 0))
         cmds.modelPanel(cam="perspShape", tearOff=False)
         cmds.setParent('..')
         cmds.setParent('..')
