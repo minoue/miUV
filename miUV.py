@@ -18,8 +18,8 @@ class MiUV(object):
         self.currentDir = os.path.dirname(__file__)
         self.iconDir = os.path.join(self.currentDir, "icons")
         self.homeDir = os.path.expanduser("~")
-        self.uvTexturePath = os.path.join(
-            self.currentDir, "images/uvTexture.jpg")
+        self.uvTexturePath = os.path.normpath(os.path.join(
+            self.currentDir, "images/uvTexture.jpg"))
         print self.uvTexturePath
 
     def createUI(self):
@@ -51,11 +51,13 @@ class MiUV(object):
             min=0.0,
             max=20.0,
             parent=shaderLayout)
-        if "uvShaderPlace2dTexture":
+        if cmds.objExists("uvShaderPlace2dTexture"):
             cmds.attrFieldSliderGrp(
                 uvRepeatSlider,
                 edit=True,
                 at='uvShaderPlace2dTexture.repeatU')
+        else:
+            pass
         uvShaderButton = cmds.button(
             label="Create UV shader",
             command=partial(
@@ -217,7 +219,7 @@ class MiUV(object):
             olc=[1, 1, 0],
             command=(
                 "cmds.polyProjection(ch=1, kir=True, "
-                "type='cylindrical', ibd=True, sf=True, ry=90)"),
+                "type='cylindrical', ibd=True, sf=True, rz=90)"),
             commandRepeatable=True)
         cmds.iconTextButton(
             image="polyAutoProj.png",
