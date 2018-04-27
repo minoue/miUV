@@ -1,9 +1,12 @@
 from functools import partial
-import maya.cmds as cmds
-import maya.mel as mel
+from maya import cmds
+from maya import mel
+import os
+import miUvUtils
+
 import commands
 reload(commands)
-import os
+reload(miUvUtils)
 
 
 class MiUV(object):
@@ -20,7 +23,6 @@ class MiUV(object):
         self.homeDir = os.path.expanduser("~")
         self.uvTexturePath = os.path.normpath(os.path.join(
             self.currentDir, "images/uvTexture.jpg"))
-        print self.uvTexturePath
 
     def createUI(self):
         myWindow = cmds.window(
@@ -83,7 +85,7 @@ class MiUV(object):
             ],
             attachControl=[(uvShaderAssignButton, 'left', 2, uvShaderButton)])
 
-        #### LEFT LAYOUT ####
+        # ### LEFT LAYOUT ####
         leftLayout = cmds.columnLayout(adj=True, w=120)
         cmds.gridLayout(numberOfColumns=3, cellWidthHeight=(40, 40))
         cmds.iconTextButton(
@@ -120,16 +122,17 @@ class MiUV(object):
             commandRepeatable=True,
             command="mel.eval('polyEditUV -u 1 -v -1;')")
         cmds.setParent('..')  # gridLayout
-        cmds.button(
-            label="BonusTool AutoUnwrap",
-            command="mel.eval('bonusToolsMenu;bt_autoUnwrapUVTool;')",
-            enable=False)
+
         cmds.button(
             label="UV Centric",
             command="cmds.UVCentricUVLinkingEditor()")
-        cmds.button(label="Zebruv Tool", enable=False)
         cmds.button(label="UV Set Editor", command="cmds.UVSetEditor()")
+        cmds.button(
+            label="Transfer Attr",
+            command=miUvUtils.transferAttributesOptions)
+
         cmds.separator(h=20)
+
         cmds.text(label="Transfer UVs")
         uvSpaceTransferRadioButton = cmds.radioButtonGrp(
             labelArray2=["World", "Comp"],
@@ -167,6 +170,12 @@ class MiUV(object):
         cmds.button(
             label="Flip UVs by world",
             command=partial(commands.flipUVsByWorld))
+        cmds.button(
+            label="Flip selected UVs",
+            command=miUvUtils.flipUVs)
+        cmds.button(
+            label="Grid UVs",
+            enable=False)
         cmds.button(
             label="Delete History",
             command="cmds.DeleteHistory()")
@@ -236,7 +245,7 @@ class MiUV(object):
         cmds.setParent('..')  # gridLayout
         cmds.setParent('..')  # leftLayout
 
-        ##### BOTTOM LAYOUT #####
+        # #### BOTTOM LAYOUT #####
         bottomLayout = cmds.rowColumnLayout(
             numberOfColumns=6,
             h=45,
@@ -286,7 +295,7 @@ class MiUV(object):
             command=self.takeUvSnapshot)
         cmds.setParent('..')
 
-        ##### TEXTURE WINDOW LAYOUT #####
+        # #### TEXTURE WINDOW LAYOUT #####
         textureLayout = cmds.paneLayout(configuration='single')
         pane = cmds.paneLayout(configuration="vertical2")
         cmds.paneLayout(pane, e=True, paneSize=(1, 0, 0))
@@ -296,13 +305,13 @@ class MiUV(object):
 
         cmds.setParent('..')  # mainLayout
 
-        ### UNPARENT CURRENT UV TEXTURE EDITOR AND RE-PARENT TO MY EIDTOR ###
+        # ## UNPARENT CURRENT UV TEXTURE EDITOR AND RE-PARENT TO MY EIDTOR ###
         texturePanel = cmds.getPanel(scriptType='polyTexturePlacementPanel')[0]
         cmds.scriptedPanel(texturePanel, edit=True, unParent=True)
         mel.eval("fillEmptyPanes;")
         cmds.scriptedPanel(texturePanel, edit=True, parent=pane)
 
-        #FORM LAYOUT
+        # FORM LAYOUT
         cmds.formLayout(
             mainLayout,
             e=True,
@@ -417,19 +426,20 @@ class MiUV(object):
             xRes = 512
             yRes = 512
 
-        cmds.uvSnapshot(name=fileName,
-                        aa=True,
-                        fileFormat=imageFormat,
-                        xResolution=xRes,
-                        yResolution=yRes,
-                        overwrite=True,
-                        redColor=255,
-                        greenColor=255,
-                        blueColor=255,
-                        uMax=uMax,
-                        uMin=uMin,
-                        vMax=vMax,
-                        vMin=vMin)
+        cmds.uvSnapshot(
+            name=fileName,
+            aa=True,
+            fileFormat=imageFormat,
+            xResolution=xRes,
+            yResolution=yRes,
+            overwrite=True,
+            redColor=255,
+            greenColor=255,
+            blueColor=255,
+            uMax=uMax,
+            uMin=uMin,
+            vMax=vMax,
+            vMin=vMin)
 
     def browseDirectoryPath(self, *args):
         basicFilter = "*All(*.*);;tif(*.tif);;jpg(*.jpg);;exr(*.exr);;tx(*.tx)"
@@ -446,6 +456,9 @@ def main():
     cmds.scriptJob(
         event=["SelectionChanged", uvwin.selectUVshellBorder],
         parent=uvwin.windowName)
+
+    mel.eval("""textureWindow -edit -displaySolidMap 1 polyTexturePlacementPanel1; txtWndUpdateEditor("polyTexturePlacementPanel1", "textureWindow", "null", 101);""")
+
 
 if __name__ == '__main__':
     main()
